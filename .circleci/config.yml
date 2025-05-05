@@ -1,0 +1,44 @@
+version: 2.1
+
+jobs:
+  build_and_push:
+    docker:
+      - image: cimg/base:stable
+    environment:
+      IMAGE_NAME: "subhamveng/olap"
+    steps:
+      - checkout
+
+      - run:
+          name: Set Version Tag
+          command: |
+            echo "export VERSION_TAG=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
+
+      - run:
+          name: Install Docker CLI
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+
+      - run:
+          name: Docker Login
+          command: |
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+      - run:
+          name: Build Docker Image
+          command: |
+            source $BASH_ENV
+            docker build -t $IMAGE_NAME:$VERSION_TAG .
+
+      - run:
+          name: Push Docker Image
+          command: |
+            source $BASH_ENV
+            docker push $IMAGE_NAME:$VERSION_TAG
+
+workflows:
+  version: 2
+  deploy_flow:
+    jobs:
+      - build_and_push
