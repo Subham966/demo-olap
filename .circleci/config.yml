@@ -5,7 +5,7 @@ jobs:
     docker:
       - image: cimg/base:stable
     environment:
-      IMAGE_NAME: "subhamveng/olap"
+      IMAGE_NAME: subhamveng/olap
     steps:
       - checkout
 
@@ -13,33 +13,42 @@ jobs:
           name: Set Version Tag
           command: |
             echo "export VERSION_TAG=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
+            source $BASH_ENV
 
       - run:
-          name: Install Docker CLI
+          name: Install Docker Using Official Repository
           command: |
-            sudo apt-get update
-            sudo apt-get install -y docker.io
+            sudo apt-get update -y
+            sudo apt-get install -y ca-certificates curl gnupg lsb-release
+            sudo install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.asc
+            sudo chmod a+r /etc/apt/keyrings/docker.asc
+            echo \
+              "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+              $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+              sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            sudo apt-get update -y
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
       - run:
           name: Docker Login
-          command: |
-            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          command: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          environment:
+            DOCKER_USERNAME: your_dockerhub_username
+            DOCKER_PASSWORD: your_dockerhub_password
 
       - run:
           name: Build Docker Image
-          command: |
-            source $BASH_ENV
-            docker build -t $IMAGE_NAME:$VERSION_TAG .
+          command: docker build -t $IMAGE_NAME:$VERSION_TAG .
 
       - run:
           name: Push Docker Image
-          command: |
-            source $BASH_ENV
-            docker push $IMAGE_NAME:$VERSION_TAG
+          command: docker push $IMAGE_NAME:$VERSION_TAG
 
 workflows:
   version: 2
-  deploy_flow:
+  deploy:
     jobs:
       - build_and_push
+
       
