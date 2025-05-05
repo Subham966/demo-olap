@@ -4,8 +4,10 @@ jobs:
   build_and_push:
     docker:
       - image: cimg/base:stable
+    services:
+      - docker
     environment:
-      IMAGE_NAME: subhamveng/olap
+      IMAGE_NAME: subham966/olap
     steps:
       - checkout
       - run:
@@ -28,11 +30,6 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
       - run:
-          name: Start Docker Daemon
-          command: |
-            sudo systemctl start docker
-            sudo systemctl enable docker
-      - run:
           name: Docker Login
           command: |
             echo "Logging into Docker Hub..."
@@ -44,8 +41,14 @@ jobs:
           name: Push Docker Image
           command: docker push $IMAGE_NAME:$VERSION_TAG
 
+services:
+  docker:
+    image: docker:19.03.12-dind
+    privileged: true
+
 workflows:
   version: 2
   deploy:
     jobs:
       - build_and_push
+
