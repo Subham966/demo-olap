@@ -4,8 +4,6 @@ jobs:
   build_and_push:
     docker:
       - image: cimg/base:stable
-    services:
-      - docker
     environment:
       IMAGE_NAME: subham966/olap
     steps:
@@ -32,8 +30,7 @@ jobs:
       - run:
           name: Docker Login
           command: |
-            echo "Logging into Docker Hub..."
-            echo "Subham@966" | docker login -u "subham966" --password-stdin
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - run:
           name: Build Docker Image
           command: docker build -t $IMAGE_NAME:$VERSION_TAG .
@@ -41,14 +38,8 @@ jobs:
           name: Push Docker Image
           command: docker push $IMAGE_NAME:$VERSION_TAG
 
-services:
-  docker:
-    image: docker:19.03.12-dind
-    privileged: true
-
 workflows:
   version: 2
   deploy:
     jobs:
       - build_and_push
-
