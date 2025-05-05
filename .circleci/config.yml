@@ -8,13 +8,11 @@ jobs:
       IMAGE_NAME: subhamveng/olap
     steps:
       - checkout
-
       - run:
           name: Set Version Tag
           command: |
             echo "export VERSION_TAG=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
             source $BASH_ENV
-
       - run:
           name: Install Docker Using Official Repository
           command: |
@@ -29,18 +27,14 @@ jobs:
               sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
             sudo apt-get update -y
             sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
       - run:
           name: Docker Login
-          command: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-          environment:
-            DOCKER_USERNAME: your_dockerhub_username
-            DOCKER_PASSWORD: your_dockerhub_password
-
+          command: |
+            echo "Logging into Docker Hub..."
+            echo "Subham@966" | docker login -u "subham966" --password-stdin
       - run:
           name: Build Docker Image
           command: docker build -t $IMAGE_NAME:$VERSION_TAG .
-
       - run:
           name: Push Docker Image
           command: docker push $IMAGE_NAME:$VERSION_TAG
@@ -50,5 +44,3 @@ workflows:
   deploy:
     jobs:
       - build_and_push
-
-      
