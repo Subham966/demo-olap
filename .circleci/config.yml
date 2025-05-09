@@ -39,14 +39,14 @@ jobs:
       - run:
           name: Deploy OLAP to GCP VM
           command: |
-            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \<<EOF
+            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" <<EOF
               set -e
               echo "Logging into Docker Hub..."
               echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
               
               cd /home/prod/
               echo "Updating OLAP image version..."
-              # Update image version using the CircleCI build number
+              # Update image version using the CircleCI build number passed as VERSION_TAG
               sed -i 's|image: .*|image: subham966/olap:${CIRCLE_BUILD_NUM}|g' olap.yml
 
               echo "Restarting OLAP service..."
