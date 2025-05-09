@@ -8,27 +8,21 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Set Version Tag
-          command: |
-            # Use CircleCI build number to create the version tag
-            echo "export VERSION_TAG=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
-            source $BASH_ENV
-      - run:
           name: Docker Login
           command: |
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - run:
           name: Build Docker Image
-          command: docker build -t $IMAGE_NAME:$VERSION_TAG .
+          command: docker build -t $IMAGE_NAME:latest .
       - run:
           name: Push Docker Image
-          command: docker push $IMAGE_NAME:$VERSION_TAG
+          command: docker push $IMAGE_NAME:latest
       - run:
           name: Show Built Docker Image Info
           command: |
             docker image ls | grep "$IMAGE_NAME"
             echo "Digest of built image:"
-            docker inspect --format='{{index .RepoDigests 0}}' $IMAGE_NAME:$VERSION_TAG || echo "Digest not available"
+            docker inspect --format='{{index .RepoDigests 0}}' $IMAGE_NAME:latest || echo "Digest not available"
 
   deploy:
     machine: true
@@ -39,15 +33,15 @@ jobs:
       - run:
           name: Deploy OLAP to GCP VM
           command: |
-            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \<<EOF
+            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" <<EOF
               set -e
               echo "Logging into Docker Hub..."
               echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
               
               cd /home/prod/
               echo "Updating OLAP image version..."
-              # Update image version using the CircleCI build number passed as VERSION_TAG
-              sed -i 's|image: .*|image: subham966/olap:${CIRCLE_BUILD_NUM}|g' olap.yml
+              # Update image to 'latest'
+              sed -i 's|image: .*|image: subham966/olap:latest|g' olap.yml
 
               echo "Restarting OLAP service..."
               docker compose -f olap.yml down
@@ -56,7 +50,7 @@ jobs:
               echo "Verifying pulled image..."
               docker image ls | grep subham966/olap
               echo "Digest of pulled image:"
-              docker inspect --format='{{index .RepoDigests 0}}' subham966/olap:${CIRCLE_BUILD_NUM} || echo "Digest not available"
+              docker inspect --format='{{index .RepoDigests 0}}' subham966/olap:latest || echo "Digest not available"
             EOF
 
 workflows:
