@@ -28,11 +28,11 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "SHA256:Z4t6JpFL5B/DHUzX09yH/CpRh+pym4PIVwZm3NcMBa4"
+            - "Z4t6JpFL5B/DHUzX09yH/CpRh+pym4PIVwZm3NcMBa4"
       - run:
           name: Deploy OLAP to GCP VM
           command: |
-            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \<< EOF
+            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" <<EOF
               set -e
               cd /home/prod/
               echo "Updating OLAP image version..."
