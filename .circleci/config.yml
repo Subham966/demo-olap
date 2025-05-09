@@ -23,27 +23,36 @@ jobs:
           name: Push Docker Image
           command: docker push $IMAGE_NAME:$VERSION_TAG
 
+  deploy:
+    machine: true
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:Z4t6JpFL5B/DHUzX09yH/CpRh+pym4PIVwZm3NcMBa4"
+      - run:
+          name: Deploy OLAP to GCP VM
+          command: |
+            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" << EOF
+              set -e
+              cd /home/prod/
+              echo "Updating OLAP image version..."
+              sed -i 's|subham966/olap:[^"]*|subham966/olap:${CIRCLE_BUILD_NUM}|' olap.yml
+              echo "Restarting OLAP service..."
+              docker compose -f olap.yml down
+              docker compose -f olap.yml up -d
+            EOF
+
 workflows:
   version: 2
-  build_and_push_workflow:
+  build_and_deploy:
     jobs:
       - build_and_push:
           filters:
             branches:
-              only:
-                - manual-trigger
-                - cicd
-
-#==============================================================================
-
-# workflows:
-#   version: 2
-#   build_and_push_workflow:
-#     jobs:
-#       - build_and_push:
-#           filters:
-#             branches:
-#               only:
-#                 - main
-#                 - staging
-#                 - cicd
+              only: [cicd-deploy]
+      - deploy:
+          requires:
+            - build_and_push
+          filters:
+            branches:
+              only: [cicd-deploy]
