@@ -32,7 +32,7 @@ jobs:
       - run:
           name: Deploy OLAP to GCP VM
           command: |
-            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" << EOF
+            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \<< EOF
               set -e
               cd /home/prod/
               echo "Updating OLAP image version..."
