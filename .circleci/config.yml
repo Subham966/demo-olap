@@ -24,34 +24,43 @@ jobs:
             echo "Digest of built image:"
             docker inspect --format='{{index .RepoDigests 0}}' $IMAGE_NAME:latest || echo "Digest not available"
 
-  deploy:
-    machine: true
-    steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "Z4t6JpFL5B/DHUzX09yH/CpRh+pym4PIVwZm3NcMBa4"
-      - run:
-          name: Deploy OLAP to GCP VM
-          command: |
-            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \<<EOF
-              set -e
-              echo "Logging into Docker Hub..."
-              echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-              
-              cd /home/prod/
-              echo "Updating OLAP image version..."
-              # Update image to 'latest'
-              sed -i 's|image: .*|image: subham966/olap:latest|g' olap.yml
+deploy:
+  machine: true
+  steps:
+    - add_ssh_keys:
+        fingerprints:
+          - "Z4t6JpFL5B/DHUzX09yH/CpRh+pym4PIVwZm3NcMBa4"
+    - run:
+        name: Deploy OLAP to GCP VM
+        command: |
+          ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \<<EOF
+            set -e
+            echo "Logging into Docker Hub..."
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            
+            cd /home/prod/
+            echo "Updating OLAP image version..."
+            # Update image to 'latest'
+            sed -i 's|image: .*|image: subham966/olap:latest|g' olap.yml
 
-              echo "Restarting OLAP service..."
-              docker compose -f olap.yml down
-              docker compose -f olap.yml up -d
+            # Remove the local 'latest' image
+            echo "Removing the old local image (if exists)..."
+            docker rmi subham966/olap:latest || true
 
-              echo "Verifying pulled image..."
-              docker image ls | grep subham966/olap
-              echo "Digest of pulled image:"
-              docker inspect --format='{{index .RepoDigests 0}}' subham966/olap:latest || echo "Digest not available"
-            EOF
+            # Pull the latest image from Docker Hub
+            echo "Pulling the latest image..."
+            docker pull subham966/olap:latest
+
+            echo "Restarting OLAP service..."
+            docker compose -f olap.yml down
+            docker compose -f olap.yml up -d
+
+            echo "Verifying pulled image..."
+            docker image ls | grep subham966/olap
+            echo "Digest of pulled image:"
+            docker inspect --format='{{index .RepoDigests 0}}' subham966/olap:latest || echo "Digest not available"
+          EOF
+
 
 workflows:
   version: 2
