@@ -36,7 +36,7 @@ jobs:
               set -e
               cd /home/prod/
               echo "Updating OLAP image version..."
-              sed -i 's|subham966/olap:[^"]*|subham966/olap:${CIRCLE_BUILD_NUM}|' olap.yml
+              sed -i 's|vengagedockerhub/online-appointment:[^"]*|subham966/olap:${CIRCLE_BUILD_NUM}|g' olap.yml
               echo "Restarting OLAP service..."
               docker compose -f olap.yml down
               docker compose -f olap.yml up -d
