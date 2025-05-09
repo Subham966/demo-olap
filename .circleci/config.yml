@@ -39,7 +39,7 @@ jobs:
       - run:
           name: Deploy OLAP to GCP VM
           command: |
-            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" <<EOF
+            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \<<EOF
               set -e
               echo "Logging into Docker Hub..."
               echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
