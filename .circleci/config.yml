@@ -32,15 +32,20 @@ jobs:
       - run:
           name: Deploy OLAP to GCP VM
           command: |
-            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \<<EOF
+            ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" <<EOF
               set -e
+              echo "Logging into Docker Hub..."
+              echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+              
               cd /home/prod/
               echo "Updating OLAP image version..."
-              sed -i 's|vengagedockerhub/online-appointment:[^"]*|subham966/olap:${CIRCLE_BUILD_NUM}|g' olap.yml
+              sed -i 's|image: .*|image: subham966/olap:${CIRCLE_BUILD_NUM}|g' olap.yml
+
               echo "Restarting OLAP service..."
               docker compose -f olap.yml down
               docker compose -f olap.yml up -d
             EOF
+
 
 workflows:
   version: 2
