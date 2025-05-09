@@ -22,6 +22,12 @@ jobs:
       - run:
           name: Push Docker Image
           command: docker push $IMAGE_NAME:$VERSION_TAG
+      - run:
+          name: Show Built Docker Image Info
+          command: |
+            docker image ls | grep "$IMAGE_NAME"
+            echo "Digest of built image:"
+            docker inspect --format='{{index .RepoDigests 0}}' $IMAGE_NAME:$VERSION_TAG || echo "Digest not available"
 
   deploy:
     machine: true
@@ -44,8 +50,12 @@ jobs:
               echo "Restarting OLAP service..."
               docker compose -f olap.yml down
               docker compose -f olap.yml up -d
-            EOF
 
+              echo "Verifying pulled image..."
+              docker image ls | grep subham966/olap
+              echo "Digest of pulled image:"
+              docker inspect --format='{{index .RepoDigests 0}}' subham966/olap:${CIRCLE_BUILD_NUM} || echo "Digest not available"
+            EOF
 
 workflows:
   version: 2
