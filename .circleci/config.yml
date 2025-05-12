@@ -50,6 +50,9 @@ jobs:
               # Pull the latest image from Docker Hub
               echo "Pulling the latest image..."
               docker pull subham966/olap:latest
+
+              echo "Cleaning up dangling images..."
+              docker image prune -f
   
               echo "Restarting OLAP service..."
               docker compose -f olap.yml down
